@@ -104,7 +104,7 @@ func applyTransaction(msg types.Message, config *params.ChainConfig, author *com
 
 	// PKLOG injection
 	if evm.PkPrintCalls {
-		PKLoggerSend(fmt.Sprintf("tx start: hash=%s block=%d\n", tx.Hash(), blockNumber));
+		pklogger.PKLoggerSend(fmt.Sprintf("tx start: hash=%s block=%d\n", tx.Hash(), blockNumber));
 	}
 
 	// Apply the transaction to the current state (included in the env).
@@ -135,7 +135,7 @@ func applyTransaction(msg types.Message, config *params.ChainConfig, author *com
 
 	// PKLOG injection
 	if evm.PkPrintCalls {
-		PKLoggerSend(fmt.Sprintf("tx end: hash=%s status=%d gas=%d\n", tx.Hash(), receipt.Status, result.UsedGas));
+		pklogger.PKLoggerSend(fmt.Sprintf("tx end: hash=%s status=%d gas=%d\n", tx.Hash(), receipt.Status, result.UsedGas));
 	}
 
 	// If the transaction created a contract, store the creation address in the receipt.
