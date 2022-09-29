@@ -76,6 +76,7 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 	vmenv := vm.NewEVM(blockContext, vm.TxContext{}, statedb, p.config, cfg)
 
 	vmenv.PkPrintCalls = true
+	pklogger.PKLoggerSend(fmt.Sprintf("block start: number=%d hash=%s\n", blockNumber, blockHash));
 
 	// Iterate over and process the individual transactions
 	for i, tx := range block.Transactions() {
@@ -93,6 +94,8 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 	}
 	// Finalize the block, applying any consensus engine specific extras (e.g. block rewards)
 	p.engine.Finalize(p.bc, header, statedb, block.Transactions(), block.Uncles())
+
+	pklogger.PKLoggerSend(fmt.Sprintf("block end: number=%d\n", blockHash, blockNumber));
 
 	return receipts, allLogs, *usedGas, nil
 }

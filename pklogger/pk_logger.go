@@ -13,7 +13,7 @@ type PKLogger struct {
 	conn           net.Conn
 }
 
-var logger PKLogger
+var logger *PKLogger
 
 func initLogger() {
 	listener,err := net.Listen("unix", "./pklog.sock")
@@ -44,7 +44,7 @@ func PKLoggerSend(line string) {
 		initLogger()
 	}
 
-	fmt.Println("_PKLOG", line);
+	//fmt.Println("_PKLOG", line);
 	if logger.conn != nil {
 		logger.conn.Write([]byte(line))
 	}
