@@ -9,7 +9,7 @@ import (
 )
 
 type PKLogger struct {
-	conn       *net.Conn
+	conn       net.Conn
 }
 
 var logger = initLogger()
