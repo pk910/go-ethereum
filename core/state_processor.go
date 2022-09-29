@@ -98,7 +98,7 @@ func applyTransaction(msg types.Message, config *params.ChainConfig, author *com
 	evm.Reset(txContext, statedb)
 
 	// PKLOG injection
-	fmt.Printf("_PKLOG tx start: hash=%s\n", tx.Hash());
+	fmt.Printf("_PKLOG tx start: hash=%s block=%d\n", tx.Hash(), blockNumber);
 
 	// Apply the transaction to the current state (included in the env).
 	result, err := ApplyMessage(evm, msg, gp)
