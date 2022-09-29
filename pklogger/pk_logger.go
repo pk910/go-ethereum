@@ -63,6 +63,10 @@ func PKLoggerSend(line string) {
 
 	//fmt.Println("_PKLOG", line);
 	if logger.conn != nil {
-		logger.conn.Write([]byte(line))
+		_, err := logger.conn.Write([]byte(line))
+		if err != nil {
+      logger.conn.Close() // close if problem
+      logger.conn = nil
+   	}
 	}
 }
