@@ -9,19 +9,32 @@ import (
 )
 
 type PKLogger struct {
-	conn       net.Conn
+	listener       net.Listener
+	conn           net.Conn
 }
 
 var logger = initLogger()
+go listenLogger()
 
 func initLogger() *PKLogger {
-	conn,err := net.Dial("unix", "./pklog.sock")
+	listener,err := net.Listen("unix", "./pklog.sock")
 	if err != nil {
 			panic(err)
 	}
 
 	return &PKLogger{
-		conn: conn,
+		listener: listener,
+	}
+}
+
+func listenLogger() {
+	for {
+		fd, err := logger.listener.Accept()
+		if err != nil {
+			fmt.Println("PKLOG accept error:", err)
+		}
+
+		logger.conn = fd
 	}
 }
 
