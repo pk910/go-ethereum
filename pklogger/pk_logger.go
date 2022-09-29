@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"errors"
 )
 
 type PKLogger struct {
