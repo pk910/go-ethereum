@@ -732,7 +732,7 @@ func opCallCode(pc *uint64, interpreter *EVMInterpreter, scope *ScopeContext) ([
 
 	// PKLOG injection
 	if interpreter.evm.PkPrintCalls {
-		fmt.Printf("_PKLOG tx callCode: to=%s val=%d\n", toAddr, value);
+		fmt.Printf("_PKLOG tx callCode: to=%s val=%d\n", toAddr, bigVal);
 	}
 
 	ret, returnGas, err := interpreter.evm.CallCode(scope.Contract, toAddr, args, gas, bigVal)
