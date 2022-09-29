@@ -18,6 +18,8 @@ package vm
 
 import (
 	"fmt"
+	"github.com/ethereum/go-ethereum/pklogger"
+
 	"sync/atomic"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -691,7 +693,7 @@ func opCall(pc *uint64, interpreter *EVMInterpreter, scope *ScopeContext) ([]byt
 
 	// PKLOG injection
 	if interpreter.evm.PkPrintCalls {
-		fmt.Printf("_PKLOG tx call: to=%s val=%d\n", toAddr, value);
+		PKLoggerSend(fmt.Sprintf("tx call: to=%s val=%d\n", toAddr, value));
 	}
 
 	ret, returnGas, err := interpreter.evm.Call(scope.Contract, toAddr, args, gas, bigVal)
@@ -732,7 +734,7 @@ func opCallCode(pc *uint64, interpreter *EVMInterpreter, scope *ScopeContext) ([
 
 	// PKLOG injection
 	if interpreter.evm.PkPrintCalls {
-		fmt.Printf("_PKLOG tx callCode: to=%s val=%d\n", toAddr, bigVal);
+		PKLoggerSend(fmt.Sprintf("tx callCode: to=%s val=%d\n", toAddr, bigVal));
 	}
 
 	ret, returnGas, err := interpreter.evm.CallCode(scope.Contract, toAddr, args, gas, bigVal)
