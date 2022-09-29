@@ -688,6 +688,9 @@ func opCall(pc *uint64, interpreter *EVMInterpreter, scope *ScopeContext) ([]byt
 		bigVal = value.ToBig()
 	}
 
+	// PKLOG injection
+	fmt.Printf("_PKLOG tx call: to=%s val=%d", toAddr, value);
+
 	ret, returnGas, err := interpreter.evm.Call(scope.Contract, toAddr, args, gas, bigVal)
 
 	if err != nil {

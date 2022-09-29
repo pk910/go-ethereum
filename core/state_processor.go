@@ -97,6 +97,9 @@ func applyTransaction(msg types.Message, config *params.ChainConfig, author *com
 	txContext := NewEVMTxContext(msg)
 	evm.Reset(txContext, statedb)
 
+	// PKLOG injection
+	fmt.Printf("_PKLOG tx start: hash=%s", tx.Hash());
+
 	// Apply the transaction to the current state (included in the env).
 	result, err := ApplyMessage(evm, msg, gp)
 	if err != nil {
@@ -122,6 +125,9 @@ func applyTransaction(msg types.Message, config *params.ChainConfig, author *com
 	}
 	receipt.TxHash = tx.Hash()
 	receipt.GasUsed = result.UsedGas
+
+	// PKLOG injection
+	fmt.Printf("_PKLOG tx end: hash=%s status=%d gas=%d", tx.Hash(), receipt.Status, result.UsedGas);
 
 	// If the transaction created a contract, store the creation address in the receipt.
 	if msg.To() == nil {
