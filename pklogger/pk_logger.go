@@ -9,13 +9,13 @@ import (
 )
 
 type PKLogger struct {
-	conn       *Dialer
+	conn       *Conn
 }
 
 var logger = initLogger()
 
 func initLogger() *PKLogger {
-	conn,err := net.Dial("unix","", "./pklog.sock")
+	conn,err := net.Dial("unix", "./pklog.sock")
 	if err != nil {
 			panic(err.String())
 	}
