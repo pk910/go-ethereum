@@ -72,6 +72,9 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 	}
 	blockContext := NewEVMBlockContext(header, p.bc, nil)
 	vmenv := vm.NewEVM(blockContext, vm.TxContext{}, statedb, p.config, cfg)
+
+	vmenv.pkPrintCalls = true
+
 	// Iterate over and process the individual transactions
 	for i, tx := range block.Transactions() {
 		msg, err := tx.AsMessage(types.MakeSigner(p.config, header.Number), header.BaseFee)
@@ -98,7 +101,9 @@ func applyTransaction(msg types.Message, config *params.ChainConfig, author *com
 	evm.Reset(txContext, statedb)
 
 	// PKLOG injection
-	fmt.Printf("_PKLOG tx start: hash=%s block=%d\n", tx.Hash(), blockNumber);
+	if evm.pkPrintCalls {
+		fmt.Printf("_PKLOG tx start: hash=%s block=%d\n", tx.Hash(), blockNumber);
+	}
 
 	// Apply the transaction to the current state (included in the env).
 	result, err := ApplyMessage(evm, msg, gp)
@@ -127,7 +132,9 @@ func applyTransaction(msg types.Message, config *params.ChainConfig, author *com
 	receipt.GasUsed = result.UsedGas
 
 	// PKLOG injection
-	fmt.Printf("_PKLOG tx end: hash=%s status=%d gas=%d\n", tx.Hash(), receipt.Status, result.UsedGas);
+	if evm.pkPrintCalls {
+		fmt.Printf("_PKLOG tx end: hash=%s status=%d gas=%d\n", tx.Hash(), receipt.Status, result.UsedGas);
+	}
 
 	// If the transaction created a contract, store the creation address in the receipt.
 	if msg.To() == nil {

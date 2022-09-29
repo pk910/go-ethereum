@@ -690,7 +690,9 @@ func opCall(pc *uint64, interpreter *EVMInterpreter, scope *ScopeContext) ([]byt
 	}
 
 	// PKLOG injection
-	fmt.Printf("_PKLOG tx call: to=%s val=%d\n", toAddr, value);
+	if interpreter.evm.pkPrintCalls {
+		fmt.Printf("_PKLOG tx call: to=%s val=%d\n", toAddr, value);
+	}
 
 	ret, returnGas, err := interpreter.evm.Call(scope.Contract, toAddr, args, gas, bigVal)
 
@@ -729,7 +731,9 @@ func opCallCode(pc *uint64, interpreter *EVMInterpreter, scope *ScopeContext) ([
 	}
 
 	// PKLOG injection
-	fmt.Printf("_PKLOG tx callCode: to=%s val=%d\n", toAddr, value);
+	if interpreter.evm.pkPrintCalls {
+		fmt.Printf("_PKLOG tx callCode: to=%s val=%d\n", toAddr, value);
+	}
 
 	ret, returnGas, err := interpreter.evm.CallCode(scope.Contract, toAddr, args, gas, bigVal)
 	if err != nil {
