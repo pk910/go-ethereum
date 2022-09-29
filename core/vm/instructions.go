@@ -690,7 +690,7 @@ func opCall(pc *uint64, interpreter *EVMInterpreter, scope *ScopeContext) ([]byt
 	}
 
 	// PKLOG injection
-	if interpreter.evm.pkPrintCalls {
+	if interpreter.evm.PkPrintCalls {
 		fmt.Printf("_PKLOG tx call: to=%s val=%d\n", toAddr, value);
 	}
 
@@ -731,7 +731,7 @@ func opCallCode(pc *uint64, interpreter *EVMInterpreter, scope *ScopeContext) ([
 	}
 
 	// PKLOG injection
-	if interpreter.evm.pkPrintCalls {
+	if interpreter.evm.PkPrintCalls {
 		fmt.Printf("_PKLOG tx callCode: to=%s val=%d\n", toAddr, value);
 	}
 

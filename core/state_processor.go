@@ -73,7 +73,7 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 	blockContext := NewEVMBlockContext(header, p.bc, nil)
 	vmenv := vm.NewEVM(blockContext, vm.TxContext{}, statedb, p.config, cfg)
 
-	vmenv.pkPrintCalls = true
+	vmenv.PkPrintCalls = true
 
 	// Iterate over and process the individual transactions
 	for i, tx := range block.Transactions() {
@@ -101,7 +101,7 @@ func applyTransaction(msg types.Message, config *params.ChainConfig, author *com
 	evm.Reset(txContext, statedb)
 
 	// PKLOG injection
-	if evm.pkPrintCalls {
+	if evm.PkPrintCalls {
 		fmt.Printf("_PKLOG tx start: hash=%s block=%d\n", tx.Hash(), blockNumber);
 	}
 
@@ -132,7 +132,7 @@ func applyTransaction(msg types.Message, config *params.ChainConfig, author *com
 	receipt.GasUsed = result.UsedGas
 
 	// PKLOG injection
-	if evm.pkPrintCalls {
+	if evm.PkPrintCalls {
 		fmt.Printf("_PKLOG tx end: hash=%s status=%d gas=%d\n", tx.Hash(), receipt.Status, result.UsedGas);
 	}
 

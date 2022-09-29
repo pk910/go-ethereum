@@ -122,7 +122,7 @@ type EVM struct {
 	// applied in opCall*.
 	callGasTemp uint64
 
-	pkPrintCalls bool
+	PkPrintCalls bool
 }
 
 // NewEVM returns a new EVM. The returned EVM is not thread safe and should
