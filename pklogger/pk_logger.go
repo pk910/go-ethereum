@@ -6,6 +6,7 @@ package pklogger
 import (
 	"fmt"
 	"net"
+	"os"
 )
 
 type PKLogger struct {
@@ -16,6 +17,10 @@ type PKLogger struct {
 var logger *PKLogger
 
 func initLogger() {
+	if fileExists("./pklog.sock") {
+		os.Remove("./pklog.sock")
+	}
+
 	listener,err := net.Listen("unix", "./pklog.sock")
 	if err != nil {
 			panic(err)
@@ -26,6 +31,17 @@ func initLogger() {
 	}
 
 	go listenLogger()
+}
+
+func fileExists(filePath string) (bool) {
+	info, err := os.Stat(filePath)
+	if err == nil {
+			return !info.IsDir()
+	}
+	if errors.Is(err, os.ErrNotExist) {
+			return false
+	}
+	return false
 }
 
 func listenLogger() {
