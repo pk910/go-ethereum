@@ -18,13 +18,9 @@ type PKLogger struct {
 var logger *PKLogger
 
 func initLogger() {
-	if fileExists("./pklog.sock") {
-		os.Remove("./pklog.sock")
-	}
-
-	listener,err := net.Listen("unix", "./pklog.sock")
+	listener,err := net.Listen("tcp", "0.0.0.0:8605")
 	if err != nil {
-			panic(err)
+			return
 	}
 
 	logger = &PKLogger{
