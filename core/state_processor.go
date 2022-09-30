@@ -107,7 +107,7 @@ func applyTransaction(msg types.Message, config *params.ChainConfig, author *com
 
 	// PKLOG injection
 	if evm.PkPrintCalls {
-		pklogger.PKLoggerSend(fmt.Sprintf("tx start: hash=%s block=%d from=%s to=%s\n", tx.Hash(), blockNumber, author, tx.To()));
+		pklogger.PKLoggerSend(fmt.Sprintf("tx start: hash=%s block=%d from=%s to=%s\n", tx.Hash(), blockNumber, msg.From(), tx.To()));
 	}
 
 	// Apply the transaction to the current state (included in the env).
