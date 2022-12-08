@@ -51,6 +51,7 @@ type Genesis struct {
 	Config     *params.ChainConfig `json:"config"`
 	Nonce      uint64              `json:"nonce"`
 	Timestamp  uint64              `json:"timestamp"`
+	Ephemerality uint64            `json:"ephemerality"`
 	ExtraData  []byte              `json:"extraData"`
 	GasLimit   uint64              `json:"gasLimit"   gencodec:"required"`
 	Difficulty *big.Int            `json:"difficulty" gencodec:"required"`
@@ -221,6 +222,7 @@ type GenesisAccount struct {
 type genesisSpecMarshaling struct {
 	Nonce      math.HexOrDecimal64
 	Timestamp  math.HexOrDecimal64
+	Ephemerality math.HexOrDecimal64
 	ExtraData  hexutil.Bytes
 	GasLimit   math.HexOrDecimal64
 	GasUsed    math.HexOrDecimal64
@@ -606,11 +608,9 @@ func DefaultEphemeryGenesisBlock() *Genesis {
 	}
 
 	now := time.Now();
-	interval := uint64(172800)
-
-	iteration := uint64((uint64(now.Unix()) - g.Timestamp) / interval)
+	iteration := uint64((uint64(now.Unix()) - g.Timestamp) / g.Ephemerality)
 	g.Config.ChainID.Add(g.Config.ChainID, big.NewInt(int64(iteration)));
-	g.Timestamp = (interval * iteration) + g.Timestamp;
+	g.Timestamp = (g.Ephemerality * iteration) + g.Timestamp;
 
 	timestamp := time.Unix(int64(g.Timestamp), 0)
 	log.Info("Ephemeral Testnet Genesis", "iteration", iteration + 1, "chainid", g.Config.ChainID, "timestamp", timestamp)
