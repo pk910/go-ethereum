@@ -160,6 +160,11 @@ var (
 		Usage:    "Kiln network: pre-configured proof-of-work to proof-of-stake test network",
 		Category: flags.EthCategory,
 	}
+	EphemeryFlag = &cli.BoolFlag{
+		Name:     "ephemery",
+		Usage:    "Ephemery network: pre-configured ephemeral proof-of-stake test network",
+		Category: flags.EthCategory,
+	}
 
 	// Dev mode
 	DeveloperFlag = &cli.BoolFlag{
@@ -1008,6 +1013,7 @@ var (
 		GoerliFlag,
 		SepoliaFlag,
 		KilnFlag,
+		EphemeryFlag,
 	}
 	// NetworkFlags is the flag group of all built-in supported networks.
 	NetworkFlags = append([]cli.Flag{MainnetFlag}, TestnetFlags...)
@@ -1042,6 +1048,9 @@ func MakeDataDir(ctx *cli.Context) string {
 		}
 		if ctx.Bool(KilnFlag.Name) {
 			return filepath.Join(path, "kiln")
+		}
+		if ctx.Bool(EphemeryFlag.Name) {
+			return filepath.Join(path, "ephemery")
 		}
 		return path
 	}
@@ -1099,6 +1108,8 @@ func setBootstrapNodes(ctx *cli.Context, cfg *p2p.Config) {
 		urls = params.GoerliBootnodes
 	case ctx.Bool(KilnFlag.Name):
 		urls = params.KilnBootnodes
+	case ctx.Bool(EphemeryFlag.Name):
+		urls = params.EphemeryBootnodes
 	}
 
 	// don't apply defaults if BootstrapNodes is already set
@@ -1557,6 +1568,8 @@ func SetDataDir(ctx *cli.Context, cfg *node.Config) {
 		cfg.DataDir = filepath.Join(node.DefaultDataDir(), "sepolia")
 	case ctx.Bool(KilnFlag.Name) && cfg.DataDir == node.DefaultDataDir():
 		cfg.DataDir = filepath.Join(node.DefaultDataDir(), "kiln")
+	case ctx.Bool(EphemeryFlag.Name) && cfg.DataDir == node.DefaultDataDir():
+		cfg.DataDir = filepath.Join(node.DefaultDataDir(), "ephemery")
 	}
 }
 
@@ -1747,7 +1760,7 @@ func CheckExclusive(ctx *cli.Context, args ...interface{}) {
 // SetEthConfig applies eth-related command line flags to the config.
 func SetEthConfig(ctx *cli.Context, stack *node.Node, cfg *ethconfig.Config) {
 	// Avoid conflicting network flags
-	CheckExclusive(ctx, MainnetFlag, DeveloperFlag, RopstenFlag, RinkebyFlag, GoerliFlag, SepoliaFlag, KilnFlag)
+	CheckExclusive(ctx, MainnetFlag, DeveloperFlag, RopstenFlag, RinkebyFlag, GoerliFlag, SepoliaFlag, KilnFlag, EphemeryFlag)
 	CheckExclusive(ctx, LightServeFlag, SyncModeFlag, "light")
 	CheckExclusive(ctx, DeveloperFlag, ExternalSignerFlag) // Can't use both ephemeral unlocked and external signer
 	if ctx.String(GCModeFlag.Name) == "archive" && ctx.Uint64(TxLookupLimitFlag.Name) != 0 {
@@ -1947,6 +1960,12 @@ func SetEthConfig(ctx *cli.Context, stack *node.Node, cfg *ethconfig.Config) {
 		}
 		cfg.Genesis = core.DefaultKilnGenesisBlock()
 		SetDNSDiscoveryDefaults(cfg, params.KilnGenesisHash)
+	case ctx.Bool(EphemeryFlag.Name):
+		cfg.Genesis = core.DefaultEphemeryGenesisBlock()
+		if !ctx.IsSet(NetworkIdFlag.Name) {
+			cfg.NetworkId = cfg.Genesis.Config.ChainId
+		}
+		SetDNSDiscoveryDefaults(cfg, params.EphemeryGenesisHash)
 	case ctx.Bool(DeveloperFlag.Name):
 		if !ctx.IsSet(NetworkIdFlag.Name) {
 			cfg.NetworkId = 1337
@@ -2245,6 +2264,8 @@ func MakeGenesis(ctx *cli.Context) *core.Genesis {
 		genesis = core.DefaultGoerliGenesisBlock()
 	case ctx.Bool(KilnFlag.Name):
 		genesis = core.DefaultKilnGenesisBlock()
+	case ctx.Bool(EphemeryFlag.Name):
+		genesis = core.DefaultEphemeryGenesisBlock()
 	case ctx.Bool(DeveloperFlag.Name):
 		Fatalf("Developer chains are ephemeral")
 	}

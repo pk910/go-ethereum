@@ -50,6 +50,7 @@ type Genesis struct {
 	Config     *params.ChainConfig `json:"config"`
 	Nonce      uint64              `json:"nonce"`
 	Timestamp  uint64              `json:"timestamp"`
+	EphemeralTime uint64           `json:"ephemeral"`
 	ExtraData  []byte              `json:"extraData"`
 	GasLimit   uint64              `json:"gasLimit"   gencodec:"required"`
 	Difficulty *big.Int            `json:"difficulty" gencodec:"required"`
@@ -438,6 +439,8 @@ func (g *Genesis) configOrDefault(ghash common.Hash) *params.ChainConfig {
 		return params.GoerliChainConfig
 	case ghash == params.KilnGenesisHash:
 		return DefaultKilnGenesisBlock().Config
+	case ghash == params.EphemeryGenesisHash:
+		return DefaultEphemeryGenesisBlock().Config
 	default:
 		return params.AllEthashProtocolChanges
 	}
@@ -593,6 +596,22 @@ func DefaultKilnGenesisBlock() *Genesis {
 	if err := json.NewDecoder(reader).Decode(g); err != nil {
 		panic(err)
 	}
+	return g
+}
+
+// DefaultEphemeryGenesisBlock returns the kiln network genesis block.
+func DefaultEphemeryGenesisBlock() *Genesis {
+	g := new(Genesis)
+	reader := strings.NewReader(EphemeryAllocData)
+	if err := json.NewDecoder(reader).Decode(g); err != nil {
+		panic(err)
+	}
+
+	now := time.Now();
+	iteration := int64((now - g.Timestamp) / g.EphemeralTime)
+	g.Config.ChainId = g.Config.ChainId + iteration;
+	g.Timestamp = (g.EphemeralTime * iteration) + g.Config.Timestamp;
+
 	return g
 }
 
