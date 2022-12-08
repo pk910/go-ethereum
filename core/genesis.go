@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"math/big"
 	"strings"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -50,7 +51,6 @@ type Genesis struct {
 	Config     *params.ChainConfig `json:"config"`
 	Nonce      uint64              `json:"nonce"`
 	Timestamp  uint64              `json:"timestamp"`
-	EphemeralTime uint64           `json:"ephemeral"`
 	ExtraData  []byte              `json:"extraData"`
 	GasLimit   uint64              `json:"gasLimit"   gencodec:"required"`
 	Difficulty *big.Int            `json:"difficulty" gencodec:"required"`
@@ -439,8 +439,6 @@ func (g *Genesis) configOrDefault(ghash common.Hash) *params.ChainConfig {
 		return params.GoerliChainConfig
 	case ghash == params.KilnGenesisHash:
 		return DefaultKilnGenesisBlock().Config
-	case ghash == params.EphemeryGenesisHash:
-		return DefaultEphemeryGenesisBlock().Config
 	default:
 		return params.AllEthashProtocolChanges
 	}
@@ -599,7 +597,7 @@ func DefaultKilnGenesisBlock() *Genesis {
 	return g
 }
 
-// DefaultEphemeryGenesisBlock returns the kiln network genesis block.
+// DefaultEphemeryGenesisBlock returns the ephemery network genesis block.
 func DefaultEphemeryGenesisBlock() *Genesis {
 	g := new(Genesis)
 	reader := strings.NewReader(EphemeryAllocData)
@@ -608,9 +606,14 @@ func DefaultEphemeryGenesisBlock() *Genesis {
 	}
 
 	now := time.Now();
-	iteration := int64((now - g.Timestamp) / g.EphemeralTime)
-	g.Config.ChainId = g.Config.ChainId + iteration;
-	g.Timestamp = (g.EphemeralTime * iteration) + g.Config.Timestamp;
+	interval := uint64(172800)
+
+	iteration := uint64((uint64(now.Unix()) - g.Timestamp) / interval)
+	g.Config.ChainID.Add(g.Config.ChainID, big.NewInt(int64(iteration)));
+	g.Timestamp = (interval * iteration) + g.Timestamp;
+
+	timestamp := time.Unix(int64(g.Timestamp), 0)
+	log.Info("Ephemeral Testnet Genesis", "iteration", iteration + 1, "chainid", g.Config.ChainID, "timestamp", timestamp)
 
 	return g
 }

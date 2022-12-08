@@ -893,7 +893,7 @@ const KilnAllocData = `{
   }`
 const EphemeryAllocData = `{
   "config": {
-    "chainId": 1337498,
+    "chainId": 1337499,
     "homesteadBlock": 0,
     "eip150Block": 0,
     "eip155Block": 0,
@@ -1787,6 +1787,5 @@ const EphemeryAllocData = `{
   "nonce": "0x1234",
   "mixhash": "0x0000000000000000000000000000000000000000000000000000000000000000",
   "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
-  "timestamp": "1665428400",
-	"ephemeral": 172800
+  "timestamp": "1665428400"
 }`

@@ -1963,9 +1963,8 @@ func SetEthConfig(ctx *cli.Context, stack *node.Node, cfg *ethconfig.Config) {
 	case ctx.Bool(EphemeryFlag.Name):
 		cfg.Genesis = core.DefaultEphemeryGenesisBlock()
 		if !ctx.IsSet(NetworkIdFlag.Name) {
-			cfg.NetworkId = cfg.Genesis.Config.ChainId
+			cfg.NetworkId = cfg.Genesis.Config.ChainID.Uint64()
 		}
-		SetDNSDiscoveryDefaults(cfg, params.EphemeryGenesisHash)
 	case ctx.Bool(DeveloperFlag.Name):
 		if !ctx.IsSet(NetworkIdFlag.Name) {
 			cfg.NetworkId = 1337
