@@ -1778,6 +1778,9 @@ const EphemeryAllocData = `{
     },
     "0x6Cc9397c3B38739daCbfaA68EaD5F5D77Ba5F455": {
       "balance": "10000000000000000000000000"
+    },
+    "0x992775d32fd0ec76b95C5E76CeEA92ED5a4bE1F9": {
+      "balance": "10000000000000000000000000"
     }
   },
   "coinbase": "0x0000000000000000000000000000000000000000",
