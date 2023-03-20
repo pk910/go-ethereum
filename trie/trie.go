@@ -23,16 +23,8 @@ import (
 	"fmt"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/log"
-)
-
-var (
-	// emptyRoot is the known root hash of an empty trie.
-	emptyRoot = common.HexToHash("56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421")
-
-	// emptyState is the known hash of an empty state trie entry.
-	emptyState = crypto.Keccak256Hash(nil)
 )
 
 // Trie is a Merkle Patricia Trie. Use New to create a trie that sits on
@@ -89,9 +81,9 @@ func New(id *ID, db NodeReader) (*Trie, error) {
 	trie := &Trie{
 		owner:  id.Owner,
 		reader: reader,
-		//tracer: newTracer(),
+		tracer: newTracer(),
 	}
-	if id.Root != (common.Hash{}) && id.Root != emptyRoot {
+	if id.Root != (common.Hash{}) && id.Root != types.EmptyRootHash {
 		rootnode, err := trie.resolveAndTrack(id.Root[:], nil)
 		if err != nil {
 			return nil, err
@@ -555,7 +547,7 @@ func (t *Trie) resolveAndTrack(n hashNode, prefix []byte) (node, error) {
 // Hash returns the root hash of the trie. It does not write to the
 // database and can be used even if the trie doesn't have one.
 func (t *Trie) Hash() common.Hash {
-	hash, cached, _ := t.hashRoot()
+	hash, cached := t.hashRoot()
 	t.root = cached
 	return common.BytesToHash(hash.(hashNode))
 }
@@ -566,11 +558,17 @@ func (t *Trie) Hash() common.Hash {
 // The returned nodeset can be nil if the trie is clean (nothing to commit).
 // Once the trie is committed, it's not usable anymore. A new trie must
 // be created with new root and updated trie database for following usage
-func (t *Trie) Commit(collectLeaf bool) (common.Hash, *NodeSet, error) {
+func (t *Trie) Commit(collectLeaf bool) (common.Hash, *NodeSet) {
 	defer t.tracer.reset()
 
+	nodes := NewNodeSet(t.owner, t.tracer.accessList)
+	t.tracer.markDeletions(nodes)
+
+	// Trie is empty and can be classified into two types of situations:
+	// - The trie was empty and no update happens
+	// - The trie was non-empty and all nodes are dropped
 	if t.root == nil {
-		return emptyRoot, nil, nil
+		return types.EmptyRootHash, nodes
 	}
 	// Derive the hash for all dirty nodes first. We hold the assumption
 	// in the following procedure that all nodes are hashed.
@@ -582,28 +580,25 @@ func (t *Trie) Commit(collectLeaf bool) (common.Hash, *NodeSet, error) {
 		// Replace the root node with the origin hash in order to
 		// ensure all resolved nodes are dropped after the commit.
 		t.root = hashedNode
-		return rootHash, nil, nil
+		return rootHash, nil
 	}
-	h := newCommitter(t.owner, t.tracer, collectLeaf)
-	newRoot, nodes, err := h.Commit(t.root)
-	if err != nil {
-		return common.Hash{}, nil, err
-	}
-	t.root = newRoot
-	return rootHash, nodes, nil
+	t.root = newCommitter(nodes, collectLeaf).Commit(t.root)
+	return rootHash, nodes
 }
 
 // hashRoot calculates the root hash of the given trie
-func (t *Trie) hashRoot() (node, node, error) {
+func (t *Trie) hashRoot() (node, node) {
 	if t.root == nil {
-		return hashNode(emptyRoot.Bytes()), nil, nil
+		return hashNode(types.EmptyRootHash.Bytes()), nil
 	}
 	// If the number of changes is below 100, we let one thread handle it
 	h := newHasher(t.unhashed >= 100)
-	defer returnHasherToPool(h)
+	defer func() {
+		returnHasherToPool(h)
+		t.unhashed = 0
+	}()
 	hashed, cached := h.hash(t.root, true)
-	t.unhashed = 0
-	return hashed, cached, nil
+	return hashed, cached
 }
 
 // Reset drops the referenced root node and cleans all internal state.

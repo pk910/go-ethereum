@@ -31,6 +31,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/scwallet"
 	"github.com/ethereum/go-ethereum/accounts/usbwallet"
 	"github.com/ethereum/go-ethereum/cmd/utils"
+	"github.com/ethereum/go-ethereum/eth/downloader"
 	"github.com/ethereum/go-ethereum/eth/ethconfig"
 	"github.com/ethereum/go-ethereum/internal/ethapi"
 	"github.com/ethereum/go-ethereum/internal/flags"
@@ -46,10 +47,10 @@ var (
 	dumpConfigCommand = &cli.Command{
 		Action:      dumpConfig,
 		Name:        "dumpconfig",
-		Usage:       "Show configuration values",
-		ArgsUsage:   "",
+		Usage:       "Export configuration values in a TOML format",
+		ArgsUsage:   "<dumpfile (optional)>",
 		Flags:       flags.Merge(nodeFlags, rpcFlags),
-		Description: `The dumpconfig command shows configuration values.`,
+		Description: `Export configuration values in TOML format (to stdout by default).`,
 	}
 
 	configFileFlag = &cli.StringFlag{
@@ -157,15 +158,11 @@ func makeConfigNode(ctx *cli.Context) (*node.Node, gethConfig) {
 // makeFullNode loads geth configuration and creates the Ethereum backend.
 func makeFullNode(ctx *cli.Context) (*node.Node, ethapi.Backend) {
 	stack, cfg := makeConfigNode(ctx)
-	if ctx.IsSet(utils.OverrideTerminalTotalDifficulty.Name) {
-		cfg.Eth.OverrideTerminalTotalDifficulty = flags.GlobalBig(ctx, utils.OverrideTerminalTotalDifficulty.Name)
+	if ctx.IsSet(utils.OverrideShanghai.Name) {
+		v := ctx.Uint64(utils.OverrideShanghai.Name)
+		cfg.Eth.OverrideShanghai = &v
 	}
-	if ctx.IsSet(utils.OverrideTerminalTotalDifficultyPassed.Name) {
-		override := ctx.Bool(utils.OverrideTerminalTotalDifficultyPassed.Name)
-		cfg.Eth.OverrideTerminalTotalDifficultyPassed = &override
-	}
-
-	backend, _ := utils.RegisterEthService(stack, &cfg.Eth)
+	backend, eth := utils.RegisterEthService(stack, &cfg.Eth)
 
 	// Configure log filter RPC API.
 	filterSystem := utils.RegisterFilterAPI(stack, backend, &cfg.Eth)
@@ -178,6 +175,11 @@ func makeFullNode(ctx *cli.Context) (*node.Node, ethapi.Backend) {
 	// Add the Ethereum Stats daemon if requested.
 	if cfg.Ethstats.URL != "" {
 		utils.RegisterEthStatsService(stack, backend, cfg.Ethstats.URL)
+	}
+
+	// Configure full-sync tester service if requested
+	if ctx.IsSet(utils.SyncTargetFlag.Name) && cfg.Eth.SyncMode == downloader.FullSync {
+		utils.RegisterFullSyncTester(stack, eth, ctx.Path(utils.SyncTargetFlag.Name))
 	}
 	return stack, backend
 }

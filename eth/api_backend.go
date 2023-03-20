@@ -55,7 +55,7 @@ func (b *EthAPIBackend) ChainConfig() *params.ChainConfig {
 	return b.eth.blockchain.Config()
 }
 
-func (b *EthAPIBackend) CurrentBlock() *types.Block {
+func (b *EthAPIBackend) CurrentBlock() *types.Header {
 	return b.eth.blockchain.CurrentBlock()
 }
 
@@ -72,19 +72,25 @@ func (b *EthAPIBackend) HeaderByNumber(ctx context.Context, number rpc.BlockNumb
 	}
 	// Otherwise resolve and return the block
 	if number == rpc.LatestBlockNumber {
-		return b.eth.blockchain.CurrentBlock().Header(), nil
+		return b.eth.blockchain.CurrentBlock(), nil
 	}
 	if number == rpc.FinalizedBlockNumber {
-		block := b.eth.blockchain.CurrentFinalizedBlock()
+		if !b.eth.Merger().TDDReached() {
+			return nil, errors.New("'finalized' tag not supported on pre-merge network")
+		}
+		block := b.eth.blockchain.CurrentFinalBlock()
 		if block != nil {
-			return block.Header(), nil
+			return block, nil
 		}
 		return nil, errors.New("finalized block not found")
 	}
 	if number == rpc.SafeBlockNumber {
+		if !b.eth.Merger().TDDReached() {
+			return nil, errors.New("'safe' tag not supported on pre-merge network")
+		}
 		block := b.eth.blockchain.CurrentSafeBlock()
 		if block != nil {
-			return block.Header(), nil
+			return block, nil
 		}
 		return nil, errors.New("safe block not found")
 	}
@@ -120,19 +126,39 @@ func (b *EthAPIBackend) BlockByNumber(ctx context.Context, number rpc.BlockNumbe
 	}
 	// Otherwise resolve and return the block
 	if number == rpc.LatestBlockNumber {
-		return b.eth.blockchain.CurrentBlock(), nil
+		header := b.eth.blockchain.CurrentBlock()
+		return b.eth.blockchain.GetBlock(header.Hash(), header.Number.Uint64()), nil
 	}
 	if number == rpc.FinalizedBlockNumber {
-		return b.eth.blockchain.CurrentFinalizedBlock(), nil
+		if !b.eth.Merger().TDDReached() {
+			return nil, errors.New("'finalized' tag not supported on pre-merge network")
+		}
+		header := b.eth.blockchain.CurrentFinalBlock()
+		return b.eth.blockchain.GetBlock(header.Hash(), header.Number.Uint64()), nil
 	}
 	if number == rpc.SafeBlockNumber {
-		return b.eth.blockchain.CurrentSafeBlock(), nil
+		if !b.eth.Merger().TDDReached() {
+			return nil, errors.New("'safe' tag not supported on pre-merge network")
+		}
+		header := b.eth.blockchain.CurrentSafeBlock()
+		return b.eth.blockchain.GetBlock(header.Hash(), header.Number.Uint64()), nil
 	}
 	return b.eth.blockchain.GetBlockByNumber(uint64(number)), nil
 }
 
 func (b *EthAPIBackend) BlockByHash(ctx context.Context, hash common.Hash) (*types.Block, error) {
 	return b.eth.blockchain.GetBlockByHash(hash), nil
+}
+
+// GetBody returns body of a block. It does not resolve special block numbers.
+func (b *EthAPIBackend) GetBody(ctx context.Context, hash common.Hash, number rpc.BlockNumber) (*types.Body, error) {
+	if number < 0 || hash == (common.Hash{}) {
+		return nil, errors.New("invalid arguments; expect hash and no special block numbers")
+	}
+	if body := b.eth.blockchain.GetBody(hash); body != nil {
+		return body, nil
+	}
+	return nil, errors.New("block body not found")
 }
 
 func (b *EthAPIBackend) BlockByNumberOrHash(ctx context.Context, blockNrOrHash rpc.BlockNumberOrHash) (*types.Block, error) {
@@ -214,7 +240,7 @@ func (b *EthAPIBackend) GetTd(ctx context.Context, hash common.Hash) *big.Int {
 	return nil
 }
 
-func (b *EthAPIBackend) GetEVM(ctx context.Context, msg core.Message, state *state.StateDB, header *types.Header, vmConfig *vm.Config) (*vm.EVM, func() error, error) {
+func (b *EthAPIBackend) GetEVM(ctx context.Context, msg *core.Message, state *state.StateDB, header *types.Header, vmConfig *vm.Config) (*vm.EVM, func() error, error) {
 	if vmConfig == nil {
 		vmConfig = b.eth.blockchain.GetVMConfig()
 	}
@@ -365,9 +391,9 @@ func (b *EthAPIBackend) StartMining(threads int) error {
 }
 
 func (b *EthAPIBackend) StateAtBlock(ctx context.Context, block *types.Block, reexec uint64, base *state.StateDB, readOnly bool, preferDisk bool) (*state.StateDB, tracers.StateReleaseFunc, error) {
-	return b.eth.StateAtBlock(block, reexec, base, readOnly, preferDisk)
+	return b.eth.StateAtBlock(ctx, block, reexec, base, readOnly, preferDisk)
 }
 
-func (b *EthAPIBackend) StateAtTransaction(ctx context.Context, block *types.Block, txIndex int, reexec uint64) (core.Message, vm.BlockContext, *state.StateDB, tracers.StateReleaseFunc, error) {
-	return b.eth.stateAtTransaction(block, txIndex, reexec)
+func (b *EthAPIBackend) StateAtTransaction(ctx context.Context, block *types.Block, txIndex int, reexec uint64) (*core.Message, vm.BlockContext, *state.StateDB, tracers.StateReleaseFunc, error) {
+	return b.eth.stateAtTransaction(ctx, block, txIndex, reexec)
 }

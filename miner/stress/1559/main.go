@@ -19,6 +19,7 @@ package main
 
 import (
 	"crypto/ecdsa"
+	crand "crypto/rand"
 	"math/big"
 	"math/rand"
 	"os"
@@ -59,7 +60,7 @@ func main() {
 	// Pre-generate the ethash mining DAG so we don't race
 	ethash.MakeDataset(1, ethconfig.Defaults.Ethash.DatasetDir)
 
-	// Create an Ethash network based off of the Ropsten config
+	// Create an Ethash network
 	genesis := makeGenesis(faucets)
 
 	// Handle interrupts.
@@ -162,7 +163,7 @@ func makeTransaction(nonce uint64, privKey *ecdsa.PrivateKey, signer types.Signe
 	// Feecap and feetip are limited to 32 bytes. Offer a sightly
 	// larger buffer for creating both valid and invalid transactions.
 	var buf = make([]byte, 32+5)
-	rand.Read(buf)
+	crand.Read(buf)
 	gasTipCap := new(big.Int).SetBytes(buf)
 
 	// If the given base fee is nil(the 1559 is still not available),
@@ -173,7 +174,7 @@ func makeTransaction(nonce uint64, privKey *ecdsa.PrivateKey, signer types.Signe
 	// Generate the feecap, 75% valid feecap and 25% unguaranteed.
 	var gasFeeCap *big.Int
 	if rand.Intn(4) == 0 {
-		rand.Read(buf)
+		crand.Read(buf)
 		gasFeeCap = new(big.Int).SetBytes(buf)
 	} else {
 		gasFeeCap = new(big.Int).Add(baseFee, gasTipCap)
@@ -194,7 +195,7 @@ func makeTransaction(nonce uint64, privKey *ecdsa.PrivateKey, signer types.Signe
 // makeGenesis creates a custom Ethash genesis block based on some pre-defined
 // faucet accounts.
 func makeGenesis(faucets []*ecdsa.PrivateKey) *core.Genesis {
-	genesis := core.DefaultRopstenGenesisBlock()
+	genesis := core.DefaultGenesisBlock()
 
 	genesis.Config = params.AllEthashProtocolChanges
 	genesis.Config.LondonBlock = londonBlock

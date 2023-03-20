@@ -103,19 +103,19 @@ func testPrestateDiffTracer(tracerName string, dirPath string, t *testing.T) {
 					Transfer:    core.Transfer,
 					Coinbase:    test.Context.Miner,
 					BlockNumber: new(big.Int).SetUint64(uint64(test.Context.Number)),
-					Time:        new(big.Int).SetUint64(uint64(test.Context.Time)),
+					Time:        uint64(test.Context.Time),
 					Difficulty:  (*big.Int)(test.Context.Difficulty),
 					GasLimit:    uint64(test.Context.GasLimit),
 					BaseFee:     test.Genesis.BaseFee,
 				}
 				_, statedb = tests.MakePreState(rawdb.NewMemoryDatabase(), test.Genesis.Alloc, false)
 			)
-			tracer, err := tracers.New(tracerName, new(tracers.Context), test.TracerConfig)
+			tracer, err := tracers.DefaultDirectory.New(tracerName, new(tracers.Context), test.TracerConfig)
 			if err != nil {
 				t.Fatalf("failed to create call tracer: %v", err)
 			}
 			evm := vm.NewEVM(context, txContext, statedb, test.Genesis.Config, vm.Config{Debug: true, Tracer: tracer})
-			msg, err := tx.AsMessage(signer, nil)
+			msg, err := core.TransactionToMessage(tx, signer, nil)
 			if err != nil {
 				t.Fatalf("failed to prepare transaction for tracing: %v", err)
 			}
