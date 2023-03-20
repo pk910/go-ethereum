@@ -579,13 +579,16 @@ func DefaultEphemeryGenesisBlock() *Genesis {
 		panic(err)
 	}
 
-	now := time.Now();
+	now := time.Now()
 	iteration := uint64((uint64(now.Unix()) - g.Timestamp) / g.Ephemerality)
-	g.Config.ChainID.Add(g.Config.ChainID, big.NewInt(int64(iteration)));
-	g.Timestamp = (g.Ephemerality * iteration) + g.Timestamp;
+	g.Config.ChainID.Add(g.Config.ChainID, big.NewInt(int64(iteration)))
+	g.Timestamp = (g.Ephemerality * iteration) + g.Timestamp
+	if g.Config.ShanghaiTime != nil {
+		g.Config.ShanghaiTime = newUint64(g.Timestamp + *g.Config.ShanghaiTime)
+	}
 
 	timestamp := time.Unix(int64(g.Timestamp), 0)
-	log.Info("Ephemeral Testnet Genesis", "iteration", iteration + 1, "chainid", g.Config.ChainID, "timestamp", timestamp)
+	log.Info("Ephemeral Testnet Genesis", "iteration", iteration, "chainid", g.Config.ChainID, "timestamp", timestamp)
 
 	return g
 }
@@ -620,6 +623,8 @@ func DeveloperGenesisBlock(period uint64, gasLimit uint64, faucet common.Address
 		},
 	}
 }
+
+func newUint64(val uint64) *uint64 { return &val }
 
 func decodePrealloc(data string) GenesisAlloc {
 	var p []struct{ Addr, Balance *big.Int }

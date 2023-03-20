@@ -892,7 +892,7 @@ const KilnAllocData = `{
   }`
 const EphemeryAllocData = `{
   "config": {
-    "chainId": 1337499,
+    "chainId": 39438000,
     "homesteadBlock": 0,
     "eip150Block": 0,
     "eip155Block": 0,
@@ -904,7 +904,8 @@ const EphemeryAllocData = `{
     "berlinBlock": 0,
     "londonBlock": 0,
     "mergeForkBlock": 0,
-    "terminalTotalDifficulty": 0
+    "terminalTotalDifficulty": 0,
+    "shanghaiTime": 2220
   },
   "alloc": {
     "0x0000000000000000000000000000000000000000": {
@@ -1773,7 +1774,7 @@ const EphemeryAllocData = `{
       "balance": "100000000000000000000000000"
     },
     "0xc90E920F4DCfd4954230edCaB168D0C5B9561e03": {
-      "balance": "10000000000000000000000000"
+      "balance": "1000000000000000000000000000"
     },
     "0x6Cc9397c3B38739daCbfaA68EaD5F5D77Ba5F455": {
       "balance": "10000000000000000000000000"
@@ -1789,6 +1790,6 @@ const EphemeryAllocData = `{
   "nonce": "0x1234",
   "mixhash": "0x0000000000000000000000000000000000000000000000000000000000000000",
   "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
-  "timestamp": "1665428400",
-  "ephemerality": "172800"
+  "timestamp": "1638471600",
+  "ephemerality": "604800"
 }`
