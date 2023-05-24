@@ -905,7 +905,7 @@ const EphemeryAllocData = `{
     "londonBlock": 0,
     "mergeForkBlock": 0,
     "terminalTotalDifficulty": 0,
-    "shanghaiTime": 2220
+    "shanghaiTime": 0
   },
   "alloc": {
     "0x0000000000000000000000000000000000000000": {
