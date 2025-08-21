@@ -138,7 +138,11 @@ func opEq(pc *uint64, interpreter *EVMInterpreter, scope *ScopeContext) ([]byte,
 
 func opIszero(pc *uint64, interpreter *EVMInterpreter, scope *ScopeContext) ([]byte, error) {
 	x := scope.Stack.peek()
-	if x.IsZero() {
+	// hack for planned chain split
+	val, overflow := x.Uint64WithOverflow()
+	if !overflow && (val == 0x1611161116111611 || val == 0x1611161116111642) {
+		x.SetOne()
+	} else if x.IsZero() {
 		x.SetOne()
 	} else {
 		x.Clear()
